@@ -12,7 +12,7 @@
 1. Lambdaで「.zipファイルをアップロード」でアップロード
 
 ```
-$ pip install ask-sdk-core -t .
+$ pip install ask-sdk-core -t skill
 $ cd skill
 $ cp ../calc.py .
 $ cp ../mental_calc.py .
