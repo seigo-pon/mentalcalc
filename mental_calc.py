@@ -1,4 +1,7 @@
-from calc import CalcResult, get_calc_max, get_calc_base, get_calc, is_correct
+from calc import (
+    CalcQuestion, CalcResult,
+    get_calc_max, get_calc_incorrect_max, get_calc_base, get_calc, correct_answer
+)
 from ask_sdk_core.handler_input import HandlerInput
 from ask_sdk_core.skill_builder import SkillBuilder
 from ask_sdk_core.utils import get_slot_value, is_intent_name, is_request_type
@@ -27,13 +30,12 @@ def question_intent_handler(handler_input):
             end_session = False
         else:
             result = CalcResult(session_attr['result'])
-            if result.num > 0 and result.num < get_calc_max():
+            if result.is_start(get_calc_max()):
                 speech_text = '聞こえませんでした！ もう一度お願いします！'
                 end_session = False
             else:
                 result.base = get_calc_base()
-                result.num = 0
-                result.correct_num = 0
+                result.question_list = []
                 session_attr['result'] = result.toDict()
 
                 speech_text = '足し算にしますか、引き算にしますか? (足し算/引き算)'
@@ -57,15 +59,21 @@ def operation_intent_handler(handler_input):
         end_session = False
     else:
         result = CalcResult(session_attr['result'])
-        if result.num > 0 and result.num < get_calc_max():
+        if result.is_start(get_calc_max()):
             speech_text = '聞こえませんでした！ もう一度お願いします！'
             end_session = False
         elif (plus_minus == '足し算') or plus_minus == '引き算':
             result.operate = '足す' if plus_minus == '足し算' else '引く'
-            result.first, result.second = get_calc(result.base, result.operate)
+            question = CalcQuestion()
+            question.first, question.second = get_calc(result.base, result.operate)
+            result.question_list.append(question)
             session_attr['result'] = result.toDict()
 
-            speech_text = 'わかりました！最初の問題です。{}{}{}は？'.format(result.first, result.operate, result.second)
+            speech_text = 'わかりました！最初の問題です。{}{}{}は？'.format(
+                question.first,
+                result.operate,
+                question.second
+            )
             end_session = False
         else:
             speech_text = '聞こえませんでした！ もう一度お願いします！'
@@ -83,28 +91,64 @@ def answer_intent_handler(handler_input):
         end_session = False
     else:
         result = CalcResult(session_attr['result'])
+        question = result.question_list[-1]
 
         try:
             answer_num = int(answer)
-            if is_correct(result.first, result.second, result.operate, answer_num):
+            correct = correct_answer(question.first, question.second, result.operate)
+            if correct == answer_num:
                 speech_text = '正解です！'
-                result.correct_num += 1
+                question.is_correct = True
             else:
-                speech_text = '間違いです！'
+                speech_text = '違います！'
+                question.incorrect_num += 1
+            result.update_last_question(question)
+            session_attr['result'] = result.toDict()
 
-            result.num += 1
-            if result.num < get_calc_max():
-                result.first, result.second = get_calc(result.base, result.operate)
+            one_more = False
+            answer_text = ''
+            if not question.is_correct:
+                if question.incorrect_num < get_calc_incorrect_max():
+                    one_more = True
+                else:
+                    speech_text = '{}正解は{}です。'.format(speech_text, correct)
+
+            if one_more:
+                speech_text = '{}もう一度お答えください。{}{}{}は？'.format(
+                    speech_text,
+                    question.first,
+                    result.operate,
+                    question.second
+                )
+                end_session = False
+            elif result.num() < get_calc_max():
+                question = CalcQuestion()
+                question.first, question.second = get_calc(result.base, result.operate)
+                result.question_list.append(question)
                 session_attr['result'] = result.toDict()
 
-                if result.num == (get_calc_max() - 1):
-                    speech_text = '{}最後の問題です。{}{}{}は？'.format(speech_text, result.first, result.operate, result.second)
+                if result.num() == get_calc_max():
+                    speech_text = '{}最後の問題です。{}{}{}は？'.format(
+                        speech_text,
+                        question.first,
+                        result.operate,
+                        question.second
+                    )
                 else:
-                    speech_text = '{}{}問目です。{}{}{}は？'.format(speech_text, (result.num + 1), result.first, result.operate, result.second)
+                    speech_text = '{}次は{}問目です。{}{}{}は？'.format(
+                        speech_text,
+                        result.num(),
+                        question.first,
+                        result.operate,
+                        question.second
+                    )
                 end_session = False
             else:
-                speech_text = '{}これで終わりです。{}問正解でした！続けますか? (はい/いいえ)'.format(speech_text, result.correct_num)
-                end_session = False
+                speech_text = '{}あなたは{}問正解でした！今日はここまで。また今度お会いしましょう！'.format(
+                    speech_text,
+                    result.correct_num()
+                )
+                end_session = True
 
             session_attr['result'] = result.toDict()
 
