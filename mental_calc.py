@@ -20,26 +20,23 @@ def launch_request_handler(handler_input):
 def question_intent_handler(handler_input):
     yes_no = get_slot_value(handler_input=handler_input, slot_name="continue")
     session_attr = handler_input.attributes_manager.session_attributes
-    print(session_attr)
+    print('question_intent_handler', session_attr)
 
     if yes_no == 'はい':
         if not ('result' in session_attr):
             session_attr['result'] = CalcResult().toDict()
 
-            speech_text = '足し算にしますか、引き算にしますか? (足し算/引き算)'
+        result = CalcResult(session_attr['result'])
+        if result.is_start(get_calc_max()):
+            speech_text = '聞こえませんでした！ もう一度お願いします！'
             end_session = False
         else:
-            result = CalcResult(session_attr['result'])
-            if result.is_start(get_calc_max()):
-                speech_text = '聞こえませんでした！ もう一度お願いします！'
-                end_session = False
-            else:
-                result.base = get_calc_base()
-                result.question_list = []
-                session_attr['result'] = result.toDict()
+            result.base = get_calc_base()
+            result.question_list = []
+            session_attr['result'] = result.toDict()
 
-                speech_text = '足し算にしますか、引き算にしますか? (足し算/引き算)'
-                end_session = False
+            speech_text = '足し算にしますか、引き算にしますか? (足し算/引き算)'
+            end_session = False
     elif yes_no == 'いいえ':
         speech_text = "また今度お会いしましょう！"
         end_session = True
@@ -54,6 +51,8 @@ def question_intent_handler(handler_input):
 def operation_intent_handler(handler_input):
     plus_minus = get_slot_value(handler_input=handler_input, slot_name="operation")
     session_attr = handler_input.attributes_manager.session_attributes
+    print('operation_intent_handler', session_attr)
+
     if not ('result' in session_attr):
         speech_text = "暗算を始めますか? (はい/いいえ)"
         end_session = False
@@ -86,6 +85,8 @@ def operation_intent_handler(handler_input):
 def answer_intent_handler(handler_input):
     answer = get_slot_value(handler_input=handler_input, slot_name="answer")
     session_attr = handler_input.attributes_manager.session_attributes
+    print('answer_intent_handler', session_attr)
+
     if not ('result' in session_attr):
         speech_text = "暗算を始めますか? (はい/いいえ)"
         end_session = False

@@ -63,7 +63,8 @@ def get_calc_incorrect_max():
     return 2
 
 def get_calc_base():
-    base = random.randint(0, 3) * 10
+    base = random.randint(0, 2) * 10
+    print('base', base)
     return base
 
 def get_calc(base, operate):
