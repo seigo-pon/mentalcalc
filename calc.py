@@ -22,19 +22,19 @@ class CalcQuestion:
         }
 
 class CalcResult:
-    base = 1
+    max_number = 20
     operate = ''
     question_list = []
 
     def __init__(self, dict_data=None):
         if dict_data is not None:
-            self.base = dict_data['base']
+            self.max_number = dict_data['max_number']
             self.operate = dict_data['operate']
             self.question_list = [CalcQuestion(question) for question in dict_data['question_list']]
 
     def toDict(self):
         return {
-            'base': self.base,
+            'max_number': self.max_number,
             'operate': self.operate,
             'question_list': [question.toDict() for question in self.question_list],
         }
@@ -62,18 +62,19 @@ def get_calc_max():
 def get_calc_incorrect_max():
     return 2
 
-def get_calc_base():
-    base = random.randint(0, 2) * 10
-    print('base', base)
-    return base
+def get_calc_max_number():
+    # max_number = random.randint(1, 2) * 10
+    max_number = 20
+    print('max_number', max_number)
+    return max_number
 
-def get_calc(base, operate):
+def get_calc(max_number, operate):
     if operate == '足す':
-        first = random.randint(base+1, base+10)
+        first = random.randint(1, max_number)
         second = random.randint(1, 9)
         return (first, second)
     else:
-        first = random.randint(base+1, base+10)
+        first = random.randint(1, max_number)
         second = random.randint(1, first if first < 9 else 9)
         return (first, second)
 

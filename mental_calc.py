@@ -1,6 +1,6 @@
 from calc import (
     CalcQuestion, CalcResult,
-    get_calc_max, get_calc_incorrect_max, get_calc_base, get_calc, correct_answer
+    get_calc_max, get_calc_incorrect_max, get_calc_max_number, get_calc, correct_answer
 )
 from ask_sdk_core.handler_input import HandlerInput
 from ask_sdk_core.skill_builder import SkillBuilder
@@ -31,7 +31,7 @@ def question_intent_handler(handler_input):
             speech_text = '聞こえませんでした！ もう一度お願いします！'
             end_session = False
         else:
-            result.base = get_calc_base()
+            result.max_number = get_calc_max_number()
             result.question_list = []
             session_attr['result'] = result.toDict()
 
@@ -64,7 +64,7 @@ def operation_intent_handler(handler_input):
         elif (plus_minus == '足し算') or plus_minus == '引き算':
             result.operate = '足す' if plus_minus == '足し算' else '引く'
             question = CalcQuestion()
-            question.first, question.second = get_calc(result.base, result.operate)
+            question.first, question.second = get_calc(result.max_number, result.operate)
             result.question_list.append(question)
             session_attr['result'] = result.toDict()
 
@@ -124,7 +124,7 @@ def answer_intent_handler(handler_input):
                 end_session = False
             elif result.num() < get_calc_max():
                 question = CalcQuestion()
-                question.first, question.second = get_calc(result.base, result.operate)
+                question.first, question.second = get_calc(result.max_number, result.operate)
                 result.question_list.append(question)
                 session_attr['result'] = result.toDict()
 
