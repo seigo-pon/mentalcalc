@@ -1,4 +1,9 @@
+import boto3
+import datetime
+import json
+import os
 import random
+import uuid
 
 class CalcQuestion:
     first = 0
@@ -83,3 +88,20 @@ def correct_answer(first, second, operate):
         return (first + second)
     else:
         return (first - second)
+
+def save_result(result):
+    table_name = os.environ['RESULT_TABLE_NAME']
+
+    try:
+        dynamoDB = boto3.resource("dynamodb")
+        table = dynamoDB.Table(table_name)
+
+        table.put_item(
+            Item = {
+                "uid": str(uuid.uuid4()),
+                "created_at": int(datetime.datetime.now().timestamp() * 1000),
+                "result": json.dumps(result.toDict())
+            }
+        )
+    except Exception as e:
+        print('save_result error', e)

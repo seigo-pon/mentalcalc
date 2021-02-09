@@ -1,6 +1,6 @@
 from calc import (
     CalcQuestion, CalcResult,
-    get_calc_max, get_calc_incorrect_max, get_calc_max_number, get_calc, correct_answer
+    get_calc_max, get_calc_incorrect_max, get_calc_max_number, get_calc, correct_answer, save_result
 )
 from ask_sdk_core.handler_input import HandlerInput
 from ask_sdk_core.skill_builder import SkillBuilder
@@ -150,6 +150,8 @@ def answer_intent_handler(handler_input):
                     result.correct_num()
                 )
                 end_session = True
+
+                save_result(result)
 
             session_attr['result'] = result.toDict()
 
