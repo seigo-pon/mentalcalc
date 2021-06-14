@@ -69,7 +69,7 @@ def get_calc_incorrect_max():
 
 def get_calc_max_number():
     # max_number = random.randint(1, 2) * 10
-    max_number = 20
+    max_number = 10
     print('max_number', max_number)
     return max_number
 
