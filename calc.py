@@ -73,15 +73,41 @@ def get_calc_max_number():
     print('max_number', max_number)
     return max_number
 
-def get_calc(max_number, operate):
-    if operate == '足す':
-        first = random.randint(1, max_number)
-        second = random.randint(1, 9)
-        return (first, second)
-    else:
-        first = random.randint(1, max_number)
-        second = random.randint(1, first if first < 9 else 9)
-        return (first, second)
+def get_calc(max_number, operate, question_list):
+    first = 0
+    second = 0
+    loop = True
+
+    while loop:
+        if operate == '足す':
+            first = random.randint(1, max_number)
+            second = random.randint(1, 9)
+        else:
+            first = random.randint(2, max_number)
+            second = random.randint(1, first - 1 if first < 9 else 9)
+
+        # 同じ問題は出さない
+        if len(list(filter(lambda x: x.first == first and x.second == second, question_list))) == 0:
+            if len(question_list) > 0:
+                before_answer = True
+
+                # 直前と同じ回答はやめる
+                if operate == '足す':
+                    if (first + second) == (question_list[-1].first + question_list[-1].second):
+                        before_answer = False
+                else:
+                    if (first - second) == (question_list[-1].first - question_list[-1].second):
+                        before_answer = False
+
+                # 直前と同じ最初の数字はやめる
+                if first == question_list[-1].first:
+                    before_answer = False
+
+                if before_answer:
+                    loop = False
+            else:
+                loop = False
+    return (first, second)
 
 def correct_answer(first, second, operate):
     if operate == '足す':

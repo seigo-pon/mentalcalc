@@ -64,7 +64,11 @@ def operation_intent_handler(handler_input):
         elif (plus_minus == '足し算') or plus_minus == '引き算':
             result.operate = '足す' if plus_minus == '足し算' else '引く'
             question = CalcQuestion()
-            question.first, question.second = get_calc(result.max_number, result.operate)
+            question.first, question.second = get_calc(
+                result.max_number,
+                result.operate,
+                result.question_list
+            )
             result.question_list.append(question)
             session_attr['result'] = result.toDict()
 
@@ -124,7 +128,11 @@ def answer_intent_handler(handler_input):
                 end_session = False
             elif result.num() < get_calc_max():
                 question = CalcQuestion()
-                question.first, question.second = get_calc(result.max_number, result.operate)
+                question.first, question.second = get_calc(
+                    result.max_number,
+                    result.operate,
+                    result.question_list
+                )
                 result.question_list.append(question)
                 session_attr['result'] = result.toDict()
 
@@ -145,7 +153,7 @@ def answer_intent_handler(handler_input):
                     )
                 end_session = False
             else:
-                speech_text = '{}あなたは{}問正解でした！今日はここまで。また今度お会いしましょう！'.format(
+                speech_text = '{}今回は{}問正解でした！今日はここまで。また今度お会いしましょう！'.format(
                     speech_text,
                     result.correct_num()
                 )
@@ -153,12 +161,32 @@ def answer_intent_handler(handler_input):
 
                 save_result(result)
 
-            session_attr['result'] = result.toDict()
-
         except Exception as e:
             print(e)
             speech_text = '聞こえませんでした！ もう一度お願いします！'
             end_session = False
+
+    handler_input.response_builder.speak(speech_text).set_card(SimpleCard("Mental Calc", speech_text)).set_should_end_session(end_session)
+    return handler_input.response_builder.response
+
+@sb.request_handler(can_handle_func=is_intent_name("RestartIntent"))
+def answer_intent_handler(handler_input):
+    session_attr = handler_input.attributes_manager.session_attributes
+    print('answer_intent_handler', session_attr)
+
+    if not ('result' in session_attr):
+        speech_text = "暗算を始めますか? (はい/いいえ)"
+        end_session = False
+    else:
+        result = CalcResult(session_attr['result'])
+        question = result.question_list[-1]
+
+        speech_text = 'わかりました。もう一度お答えください。{}{}{}は？'.format(
+            question.first,
+            result.operate,
+            question.second
+        )
+        end_session = False
 
     handler_input.response_builder.speak(speech_text).set_card(SimpleCard("Mental Calc", speech_text)).set_should_end_session(end_session)
     return handler_input.response_builder.response
